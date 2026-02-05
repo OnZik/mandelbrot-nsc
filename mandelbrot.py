@@ -48,5 +48,6 @@ plt.imshow(result, cmap='viridis')
 plt.colorbar()
 plt.title("Mandelbrot")
 plt.show
+plt.savefig("mandelbrot.png")
 
 
