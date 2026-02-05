@@ -1,39 +1,52 @@
 
-import numpy as np
+
 """
 Mandelbrot Set Generator
 Author : Ondrej Zikan
 Course : Numerical Scientific Computing 2026
 """
+
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+
 max_iter = 100
 
-width, height = 100, 100
-
-# Define the range of x and y
-xmin, xmax = -2, 1
-ymin, ymax = -1.5, 1.5
-
-# Create evenly spaced values for x and y
-x_points = np.linspace(xmin, xmax, width)
-y_points = np.linspace(ymin, ymax, height)
-
 def mandelbrod_point(c):
-    z = 0
+    z = 0 + 0j
+    n_iter = 0
     for n in range(max_iter):
+        n_iter = n
         z = z*z + c
         if (abs(z) > 2):
-            return n
-    return n
+            break;
+    return n_iter
   
-def compute_mandelbrot():
-    array = [] 
-    for x in x_points:
-        for y in y_points:
-            z = x + y*1j
-            iter_count = mandelbrod_point(z)
-            array.append(iter_count)
-            
-    return array
+def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height):
+    
+    x_points = np.linspace(xmin, xmax, width)
+    y_points = np.linspace(ymin, ymax, height)
+    
+    output = [[0 for _ in range(width)] for _ in range(height)]
+    
+    for x, real in enumerate(y_points):
+       
+        for y, imag in enumerate(x_points):
+            iter_count = mandelbrod_point(real + imag*1j)
+           
+            output[x][y] = iter_count
+      
+    return output
             
        
-print(compute_mandelbrot());
+start = time.time ()
+result = compute_mandelbrot( -2 , 1, -1.5 , 1.5 , 1024 , 1024)
+elapsed = time.time() - start
+print (f" Computation took { elapsed :.3f} seconds ")
+
+plt.imshow(result, cmap='viridis')
+plt.colorbar()
+plt.title("Mandelbrot")
+plt.show
+
+
