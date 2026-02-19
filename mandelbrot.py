@@ -8,11 +8,9 @@ Course : Numerical Scientific Computing 2026
 
 import numpy as np
 import matplotlib.pyplot as plt
-import time
+from benchmark import benchmark
 
-max_iter = 100
-
-def mandelbrod_point(c):
+def mandelbrod_point(c, max_iter):
     z = 0
     n_iter = 0
     for n in range(max_iter):
@@ -23,7 +21,7 @@ def mandelbrod_point(c):
             
     return n_iter
   
-def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height):
+def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height, max_iter):
     
     x_points = np.linspace(xmin, xmax, width)
     y_points = np.linspace(ymin, ymax, height)
@@ -33,19 +31,15 @@ def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height):
     for x, real in enumerate(y_points):
        
         for y, imag in enumerate(x_points):
-            iter_count = mandelbrod_point(real + imag*1j)
+            iter_count = mandelbrod_point(real + imag*1j, max_iter)
            
             output[x][y] = iter_count
      
     return output
-            
-       
-start = time.time ()
-result = compute_mandelbrot( -2 , 1, -1.5 , 1.5 , 1024 , 1024)
-elapsed = time.time() - start
-print (f" Computation took { elapsed :.3f} seconds ")
 
-plt.imshow(result, cmap='viridis')
+t , M = benchmark (compute_mandelbrot , -2, 1, -1.5 , 1.5 , 1024 , 1024 , 100)
+
+plt.imshow(M, cmap='viridis')
 plt.colorbar()
 plt.title("Mandelbrot")
 plt.show

@@ -15,11 +15,11 @@ Course : Numerical Scientific Computing 2026
 
 import numpy as np
 import matplotlib.pyplot as plt
-import time
+from benchmark import benchmark
 
-max_iter = 100
+
   
-def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height):
+def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height, max_iter):
     
     x = np.linspace ( xmin , xmax, width) # 1024 x- values
     y = np.linspace ( ymin , ymax , height) # 1024 y- values
@@ -45,14 +45,12 @@ def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height):
         M[mask] += 1
     
     return M
+
+t , M = benchmark (compute_mandelbrot , -2, 1, -1.5 , 1.5 , 1024 , 1024 , 100)
             
 
-start = time.time ()
-result = compute_mandelbrot( -2 , 1, -1.5 , 1.5 , 1024 , 1024)
-elapsed = time.time() - start
-print (f" Computation took { elapsed :.3f} seconds ")
 
-plt.imshow(result, cmap='viridis')
+plt.imshow(M, cmap='viridis')
 plt.colorbar()
 plt.title("Mandelbrot")
 plt.show
