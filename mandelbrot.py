@@ -41,7 +41,7 @@ def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height):
             
        
 start = time.time ()
-result = compute_mandelbrot( -2 , 1, -1.5 , 1.5 , 10 , 10)
+result = compute_mandelbrot( -2 , 1, -1.5 , 1.5 , 1024 , 1024)
 elapsed = time.time() - start
 print (f" Computation took { elapsed :.3f} seconds ")
 
