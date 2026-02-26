@@ -5,8 +5,6 @@ Created on Thu Feb 19 13:36:54 2026
 @author: zikan
 """
 
-
-
 """
 Mandelbrot Set Generator
 Author : Ondrej Zikan
@@ -15,15 +13,13 @@ Course : Numerical Scientific Computing 2026
 
 import numpy as np
 import matplotlib.pyplot as plt
-#from benchmark import benchmark
 import timeit
 
 
-  
-def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height, max_iter):
+def mandelbrot_numpy(xmin, xmax, ymin, ymax, width, height, max_iter):
     
-    x = np.linspace ( xmin , xmax, width) # 1024 x- values
-    y = np.linspace ( ymin , ymax , height) # 1024 y- values
+    x = np.linspace ( xmin , xmax, width) #  x- values
+    y = np.linspace ( ymin , ymax , height) #  y- values
     X , Y = np.meshgrid (x , y) # 2D grids
     C = X + 1j* Y # Complex grid
     
@@ -48,7 +44,7 @@ def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height, max_iter):
     return M
 
 def show_mandelbrot(n):
-    M = compute_mandelbrot(-2, 1, -1.5 , 1.5 , n , n , 100)
+    M = mandelbrot_numpy(-2, 1, -1.5 , 1.5 , n , n , 100)
     
     plt.imshow(M, cmap='viridis')
     plt.colorbar()
@@ -63,7 +59,7 @@ def show_comp_time():
     grid_sizes = [256, 512, 1024, 2048, 4096]
     runtimes = []  
     for n in grid_sizes:
-        t = timeit.timeit(lambda: compute_mandelbrot(-2, 1, -1.5 , 1.5 , n , n , 100), number=1)
+        t = timeit.timeit(lambda: mandelbrot_numpy(-2, 1, -1.5 , 1.5 , n , n , 100), number=1)
         runtimes.append(t)
         print(f"Grid: {n}x{n}, Time: {t:.4f} seconds")
     
@@ -74,8 +70,8 @@ def show_comp_time():
     plt.ylabel("Runtime")
     plt.show()
     
-show_comp_time()
-show_mandelbrot(1024)
+#show_comp_time()
+#show_mandelbrot(1024)
         
         
 

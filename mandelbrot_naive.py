@@ -21,7 +21,7 @@ def mandelbrod_point(c, max_iter):
             
     return n_iter
   
-def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height, max_iter):
+def mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter):
     
     x_points = np.linspace(xmin, xmax, width)
     y_points = np.linspace(ymin, ymax, height)
@@ -37,12 +37,14 @@ def compute_mandelbrot(xmin, xmax, ymin, ymax, width, height, max_iter):
      
     return output
 
-t , M = benchmark (compute_mandelbrot , -2, 1, -1.5 , 1.5 , 1024 , 1024 , 100)
+#t , M = benchmark (compute_mandelbrot , -2, 1, -1.5 , 1.5 , 1024 , 1024 , 100)
 
-plt.imshow(M, cmap='viridis')
-plt.colorbar()
-plt.title("Mandelbrot")
-plt.show
-plt.savefig("mandelbrot.png")
+
+
+#plt.imshow(M, cmap='viridis')
+#plt.colorbar()
+#plt.title("Mandelbrot")
+#plt.show
+#plt.savefig("mandelbrot.png")
 
 
