@@ -9,7 +9,10 @@ Course : Numerical Scientific Computing 2026
 import numpy as np
 import matplotlib.pyplot as plt
 from benchmark import benchmark
+import line_profiler
 
+
+@profile
 def mandelbrod_point(c, max_iter):
     z = 0
     n_iter = 0
@@ -20,7 +23,8 @@ def mandelbrod_point(c, max_iter):
             break;
             
     return n_iter
-  
+
+@profile
 def mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter):
     
     x_points = np.linspace(xmin, xmax, width)
@@ -39,7 +43,8 @@ def mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter):
 
 #t , M = benchmark (compute_mandelbrot , -2, 1, -1.5 , 1.5 , 1024 , 1024 , 100)
 
-
+if __name__ == "__main__":
+    mandelbrot_naive(-2, 1, -1, 1, 500, 500, 100)
 
 #plt.imshow(M, cmap='viridis')
 #plt.colorbar()
