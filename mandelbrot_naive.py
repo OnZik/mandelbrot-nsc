@@ -44,7 +44,7 @@ def mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter):
 #t , M = benchmark (compute_mandelbrot , -2, 1, -1.5 , 1.5 , 1024 , 1024 , 100)
 
 if __name__ == "__main__":
-    mandelbrot_naive(-2, 1, -1, 1, 500, 500, 100)
+    mandelbrot_naive(-2, 1, -1.5, 1.5, 512, 512, 100)
 
 #plt.imshow(M, cmap='viridis')
 #plt.colorbar()
