@@ -7,7 +7,7 @@ Created on Sat Feb 28 12:37:46 2026
 
 import numpy as np
 #import matplotlib.pyplot as plt
-from benchmark import benchmark
+#from benchmark import benchmark
 from numba import njit, int32, complex128
 
 @njit
@@ -62,16 +62,16 @@ def mandelbrot_naive_numba(xmin, xmax, ymin, ymax, width, height, max_iter):
     return output
 
 
-_ = mandelbrot_naive_numba( -2 , 1, -1.5 , 1.5 , 64 , 64, 100)
-_ = mandelbrot_hybrid( -2 , 1, -1.5 , 1.5 , 64 , 64, 100)
+#_ = mandelbrot_naive_numba( -2 , 1, -1.5 , 1.5 , 64 , 64, 100)
+#_ = mandelbrot_hybrid( -2 , 1, -1.5 , 1.5 , 64 , 64, 100)
 
-t_full , M = benchmark (mandelbrot_naive_numba , -2, 1, -1.5 , 1.5 , 1024 , 1024 , 100)
-t_hybrid , M = benchmark (mandelbrot_hybrid , -2, 1, -1.5 , 1.5 , 1024 , 1024 , 100)
+#t_full , M = benchmark (mandelbrot_naive_numba , -2, 1, -1.5 , 1.5 , 1024 , 1024 , 100)
+#t_hybrid , M = benchmark (mandelbrot_hybrid , -2, 1, -1.5 , 1.5 , 1024 , 1024 , 100)
 
 
-print (f" Hybrid : { t_hybrid :.3f}s")
-print (f" Fully compiled : { t_full :.3f}s")
-print (f" Ratio : { t_hybrid / t_full :.1f}x")
+#print (f" Hybrid : { t_hybrid :.3f}s")
+#print (f" Fully compiled : { t_full :.3f}s")
+#print (f" Ratio : { t_hybrid / t_full :.1f}x")
 
 
 #plt.imshow(M, cmap='viridis')

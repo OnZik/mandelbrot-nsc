@@ -8,10 +8,6 @@ Course : Numerical Scientific Computing 2026
 
 import numpy as np
 import matplotlib.pyplot as plt
-from benchmark import benchmark
-
-
-
 
 def mandelbrod_point(c, max_iter):
     z = 0
@@ -40,7 +36,7 @@ def mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter):
      
     return output
 
-t , M = benchmark (mandelbrot_naive , -2, 1, -1.5 , 1.5 , 512 , 512 , 100)
+#t , M = benchmark (mandelbrot_naive , -2, 1, -1.5 , 1.5 , 512 , 512 , 100)
 
 #if __name__ == "__main__":    
 #    mandelbrot_naive(-2, 1, -1.5, 1.5, 512, 512, 100)
