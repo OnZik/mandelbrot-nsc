@@ -6,12 +6,12 @@ Created on Sat Feb 28 12:37:46 2026
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from benchmark import benchmark
 from numba import njit, int32, complex128
 
 @njit
-def mandelbrod_point(c, max_iter):
+def mandelbrod_point(c: complex128 , max_iter: int32) -> int32:
     z = 0j
     n_iter = 0
     for n in range(max_iter):
