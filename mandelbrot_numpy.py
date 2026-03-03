@@ -71,7 +71,7 @@ def show_comp_time():
     plt.show()
     
 #show_comp_time()
-#show_mandelbrot(1024)
+show_mandelbrot(1024)
         
         
 

@@ -28,9 +28,9 @@ def mandelbrot_hybrid(xmin, xmax, ymin, ymax, width, height, max_iter):
     
     output = np.zeros ((height, width), dtype = np.int32)
     
-    for x, real in enumerate(y_points):
+    for x, imag in enumerate(y_points):
        
-        for y, imag in enumerate(x_points):
+        for y, real in enumerate(x_points):
             iter_count = mandelbrot_point(real + imag*1j, max_iter)
            
             output[x][y] = iter_count
@@ -45,8 +45,8 @@ def mandelbrot_naive_numba(xmin, xmax, ymin, ymax, width, height, max_iter):
     
     output = np.zeros ((height, width), dtype = np.int32)
 
-    for x, real in enumerate(y_points):      
-        for y, imag in enumerate(x_points):
+    for x, imag in enumerate(y_points):      
+        for y, real in enumerate(x_points):
             
             c = real + imag*1j
             z = 0j
@@ -66,10 +66,11 @@ def mandelbrot_numba_typed ( xmin , xmax , ymin , ymax , width , height , max_it
     x_points = np.linspace ( xmin , xmax , width ). astype ( dtype )
     y_points = np.linspace ( ymin , ymax , height ) . astype ( dtype )
     output = np.zeros (( height , width ) , dtype = np.int32 )
-    for x, real in enumerate(y_points):   
-        for y, imag in enumerate(x_points):
+    for x, imag in enumerate(y_points):   
+        for y, real in enumerate(x_points):
             iter_count = mandelbrot_point(real + imag*1j, max_iter)        
-            output[x][y] = iter_count    
+            output[x][y] = iter_count
+     
     return output
         
 for dtype in [np.float32 , np.float64 ]:
@@ -83,9 +84,9 @@ r32 = mandelbrot_numba_typed ( -2 , 1 , -1.5 , 1.5 , 1024 , 1024 , dtype = np.fl
 r64 = mandelbrot_numba_typed ( -2 , 1 , -1.5 , 1.5 , 1024 , 1024 , dtype = np.float64 )
 fig , axes = plt.subplots (1 , 2, figsize =(12 , 4) )
 for ax , result , title in zip (axes, [r32 ,r64], ['float32', 'float64 (ref)']):
-    ax.imshow(result , cmap ='hot')
+    ax.imshow(result)
     ax.set_title(title); ax.axis ('off')
-plt.savefig ('precision_comparison.png', dpi =150)
+#plt.savefig ('precision_comparison.png', dpi =150)
 
 print (f" Max diff float32 vs float64 : {np.abs(r32-r64 ).max ()}")
 #_ = mandelbrot_naive_numba( -2 , 1, -1.5 , 1.5 , 64 , 64, 100)
@@ -98,12 +99,6 @@ print (f" Max diff float32 vs float64 : {np.abs(r32-r64 ).max ()}")
 #print (f" Hybrid : { t_hybrid :.3f}s")
 #print (f" Fully compiled : { t_full :.3f}s")
 #print (f" Ratio : { t_hybrid / t_full :.1f}x")
-
-
-#plt.imshow(M, cmap='viridis')
-#plt.colorbar()
-#plt.title("Mandelbrot")
-#plt.show
 #plt.savefig("mandelbrot.png")
 
 

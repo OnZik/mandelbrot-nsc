@@ -27,25 +27,25 @@ def mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter):
     
     output = [[0 for _ in range(width)] for _ in range(height)]
     
-    for x, real in enumerate(y_points):
+    for x, imag in enumerate(y_points):
        
-        for y, imag in enumerate(x_points):
+        for y, real in enumerate(x_points):
             iter_count = mandelbrod_point(real + imag*1j, max_iter)
            
             output[x][y] = iter_count
      
     return output
 
-#t , M = benchmark (mandelbrot_naive , -2, 1, -1.5 , 1.5 , 512 , 512 , 100)
+#t , output = benchmark (mandelbrot_naive , -2, 1, -1.5 , 1.5 , 512 , 512 , 100)
 
 #if __name__ == "__main__":    
 #    mandelbrot_naive(-2, 1, -1.5, 1.5, 512, 512, 100)
 
-
-#plt.imshow(M, cmap='viridis')
-#plt.colorbar()
-#plt.title("Mandelbrot")
-#plt.show
+output =  mandelbrot_naive(-2, 1, -1.5, 1.5, 1024, 1024, 100)
+plt.imshow(output, cmap='viridis')
+plt.colorbar()
+plt.title("Mandelbrot")
+plt.show
 #plt.savefig("mandelbrot.png")
 
 
