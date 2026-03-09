@@ -10,6 +10,7 @@ from numba import njit
 import numpy as np
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
+import statistics, time, os
 
 @njit
 def mandelbrot_pixel(c_real, c_imag , max_iter):
@@ -65,6 +66,37 @@ if __name__ == '__main__':
     
     ax.set_xlabel('Re(c)')
     ax.set_ylabel('Im(c)')
+    
+    # --- MP2 M3: benchmark (in __main__ block) ---
+    N, max_iter = 1024, 100
+    X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
+    
+    # Serial baseline (Numba already warm after M1 warm-up)
+    times = []
+    for _ in range(3):
+        t0 = time.perf_counter()
+        mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+        times.append(time.perf_counter() - t0)
+    t_serial = statistics.median(times)
+    
+    for n_workers in range(1, os.cpu_count() + 1):
+        chunk_size = max(1, N // n_workers)
+        chunks, row = [], 0
+        while row < N:
+            end = min(row + chunk_size, N)
+            chunks.append((row, end, N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter))
+            row = end
+        with Pool(processes=n_workers) as pool:
+            pool.map(_worker, chunks) # warm-up: Numba JIT in all workers
+            times = []
+            for _ in range(3):
+                t0 = time.perf_counter()
+                np.vstack(pool.map(_worker, chunks))
+                times.append(time.perf_counter() - t0)
+        t_par = statistics.median(times)
+        speedup = t_serial / t_par
+        print(f"{n_workers:2d} workers: {t_par:.3f}s, speedup={speedup:.2f}x, eff={speedup/n_workers*100:.0f}%")
+
     
 
 
