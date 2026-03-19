@@ -50,7 +50,7 @@ def mandelbrot_parallel(N, x_min, x_max, y_min, y_max,
     if n_chunks is None:
         n_chunks = n_workers
         
-    chunk_size = max(1, N // n_workers)
+    chunk_size = max(1, N // n_chunks)
     chunks, row = [], 0
     
     while row < N:
@@ -107,7 +107,43 @@ if __name__ == '__main__':
         t_par = statistics.median(times)
         speedup = t_serial / t_par
         print(f"{n_workers:2d} workers: {t_par:.3f}s, speedup={speedup:.2f}x, eff={speedup/n_workers*100:.0f}%")
+        
+    
+    best_workers = 12 
 
+    configs = [1, 2, 4, 8, 16]
+    
+    print("\nChunk sweep (fixed workers):")
+    print("chunks    time (s)    LIF")
+    
+    for factor in configs:
+        n_chunks = factor * best_workers
+    
+        # Build chunks manually 
+        chunk_size = max(1, N // n_chunks)
+        chunks, row = [], 0
+        while row < N:
+            end = min(row + chunk_size, N)
+            chunks.append((row, end, N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter))
+            row = end
+    
+        with Pool(processes=best_workers) as pool:
+            # warm-up
+            pool.map(_worker, chunks)
+    
+            times = []
+            for _ in range(3):
+                t0 = time.perf_counter()
+                np.vstack(pool.map(_worker, chunks))
+                times.append(time.perf_counter() - t0)
+    
+        t_par = statistics.median(times)
+    
+        # LIF calculation
+        p = best_workers
+        lif = p * (t_par / t_serial) - 1
+    
+        print(f"{n_chunks:6d}    {t_par:.3f}    {lif:.3f}")
     
 
 
