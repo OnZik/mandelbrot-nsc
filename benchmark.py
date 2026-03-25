@@ -9,7 +9,8 @@ from mandelbrot_numba import mandelbrot_naive_numba
 from mandelbrot_numpy import mandelbrot_numpy
 from mandelbrot_naive import mandelbrot_naive
 
-def benchmark ( func , *args , n_runs = 5) :
+
+def benchmark ( func , *args , n_runs = 3) :
     """ Time func , return median of n_runs . """
     times = []
     for _ in range ( n_runs ):
@@ -25,10 +26,20 @@ def benchmark ( func , *args , n_runs = 5) :
     return median_t
 
 
-args = ( -2 , 1, -1.5 , 1.5 , 1024 , 1024, 100)
-t_naive = benchmark( mandelbrot_naive, *args)
-t_numpy = benchmark( mandelbrot_numpy, *args)
-t_numba = benchmark( mandelbrot_naive_numba, *args)
-print (f" Naive: {t_naive:.3f}s")
-print (f" NumPy: {t_numpy:.3f}s ({t_naive/t_numpy:.1f}x)")
-print (f" Numba: {t_numba:.3f}s ({t_naive/t_numba:.1f}x)")
+if __name__ == "__main__":
+    # Define your arguments
+    args = (-2.0, 1.0, -1.25, 1.25, 1024, 1024, 100) 
+    
+    t_naive = benchmark(mandelbrot_naive, *args)
+    print(f"Naive: {t_naive:.3f}s")
+    
+    t_numpy = benchmark(mandelbrot_numpy, *args)
+    print(f"Numpy: {t_numpy:.3f}s")
+    
+    t_numba = benchmark(mandelbrot_naive_numba, *args)
+    print(f"Numba: {t_numba:.3f}s")
+    
+    
+
+    
+    
