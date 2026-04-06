@@ -65,6 +65,15 @@ if __name__ == '__main__':
     
     # Warm up all workers to ensure JIT compilation is triggered before timing
     client.run(lambda: mandelbrot_chunk(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, 10))
+    
+    print("Starting computation...")
+
+    t0 = time.perf_counter()
+    result = mandelbrot_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks=32)
+    t1 = time.perf_counter()
+    
+    print("Done!")
+    print(f"Time: {t1 - t0:.3f} seconds")
     # ref = mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
     
     # # ----------------------------
