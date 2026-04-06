@@ -55,6 +55,96 @@ def mandelbrot_dask(N, x_min, x_max, y_min, y_max, max_iter=100, n_chunks=32):
     parts = dask.compute(*tasks)
     return np.vstack(parts)
 
+def benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter):
+    times = []
+    for _ in range(3):
+        t0 = time.perf_counter()
+        mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+        T1 = time.perf_counter() - t0
+        times.append(T1)
+   
+    Tp = statistics.median(times)
+    print(f"\nSerial {Tp:.3f}s")
+
+def benchmark_dask_distr(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks):
+    times = []
+    t_serial = benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+    for i in range(3):
+        t0 = time.perf_counter()
+        mandelbrot_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks)
+        t1 = time.perf_counter()
+        times.append(t1-t0)
+    
+    t_par = statistics.median(times)
+    speedup = t_serial / t_par
+    
+    print(f"\n Dask Cluster {t_par:.3f}s\n Speedup {speedup:8.3f}")
+    
+
+def chunk_sweep(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter):
+
+    chunk_numbers = [1,2,4,8,16,24,32,64,128,256,512]
+    results = []
+    # ----------------------------
+    # Serial baseline
+    # ----------------------------
+    t0 = time.perf_counter()
+    mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+    T1 = time.perf_counter() - t0
+    
+    print(f"\nSerial baseline T1 = {T1:.3f}s\n")
+    
+    for n_chunks in chunk_numbers:
+        times = []
+        for _ in range(3):
+            t0 = time.perf_counter()
+            mandelbrot_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks)
+            # print(np.array_equal(ref, result))
+            times.append(time.perf_counter() - t0)
+        
+        # Output results
+        Tp = statistics.median(times)
+        n_workers = 12
+        speedup = T1 / Tp
+        vs1x = Tp / T1
+        LIF = n_workers * Tp / T1 - 1
+        results.append((n_chunks, Tp, LIF))
+
+        print(f"{n_chunks:10d} | {Tp:10.3f} | {vs1x:8.3f} | {speedup:8.3f} | {LIF:8.3f}")
+        
+    # ----------------------------
+    # Find optimal
+    # ----------------------------
+    best = min(results, key=lambda x: x[1])  # min time
+    best_lif = min(results, key=lambda x: x[2])
+
+    print("\n--- Optimal ---")
+    print(f"n_chunks (min time): {best[0]}, t_min = {best[1]:.3f}s")
+    print(f"n_chunks (min LIF):  {best_lif[0]}, LIF_min = {best_lif[2]:.3f}")
+    
+    
+    print(f"{'n_chunks':>10} | {'time (s)':>10} | {'vs 1x':>8} | {'speedup':>8} | {'LIF':>8}")
+    print("-" * 60)
+
+
+    # ----------------------------
+    # Plot
+    x = []
+    y = []
+    for r in results:
+        x.append(r[0])
+        y.append(r[1])
+
+
+    plt.figure()
+    plt.plot(x, y, marker='o')
+    plt.xscale("log")
+    plt.xlabel("n_chunks (log scale)")
+    plt.ylabel("Wall time (s)")
+    plt.title("Dask Chunk Sweep")
+    plt.grid()
+
+
 if __name__ == '__main__':
     # Configuration
     N, max_iter = 8192, 100
@@ -66,15 +156,7 @@ if __name__ == '__main__':
     # Warm up all workers to ensure JIT compilation is triggered before timing
     client.run(lambda: mandelbrot_chunk(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, 10))
     
-    print("Starting computation...")
-
-    t0 = time.perf_counter()
-    result = mandelbrot_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks=32)
-    t1 = time.perf_counter()
     
-    print("Done!")
-    print(f"Time: {t1 - t0:.3f} seconds")
-    # ref = mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
     
     # # ----------------------------
     # # Serial baseline

@@ -46,7 +46,7 @@ def _worker(args):
     return mandelbrot_chunk(*args)
 
 
-def mandelbrot_parallel_p(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers=4, n_chunks=None, pool=None):
+def mandelbrot_parallel_p(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers=12, n_chunks=None, pool=None):
     
     if n_chunks is None:
         n_chunks = n_workers
@@ -61,7 +61,7 @@ def mandelbrot_parallel_p(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers
     
     #tiny = [(0, 8, 8, x_min, x_max, y_min, y_max, max_iter)]
     
-    if pool != None:
+    if pool == None:
         with Pool(processes=n_workers) as p:
         #p.map(_worker, tiny) # un-timed warm-up: Numba JIT in workers
             parts = p.map(_worker, chunks)
@@ -73,27 +73,9 @@ def mandelbrot_parallel_p(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers
 
 
 
-
-
-if __name__ == '__main__':
-    
-    
-    # result = mandelbrot_parallel_p( 10, -2.0, 1.0, -1.25, 1.25, 100)    
-    
-    # --  PLOT --
-    
-    # median_t = statistics.median ( times )
-    # print(median_t)
-    # # fig, ax = plt.subplots(figsize=(8, 6))
-    # # ax.imshow(result, extent=[-2.5, 1.0, -1.25, 1.25], cmap='inferno', origin='lower', aspect='equal')
-    # # ax.set_xlabel('Re(c)')
-    # # ax.set_ylabel('Im(c)')
-    
-    # --- MP2 M3: benchmark (in __main__ block) ---
-    N, max_iter = 1024, 100
-    X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
-    
-    # Serial baseline (Numba already warm after M1 warm-up)
+def benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter):
+    # warm-up
+    mandelbrot_serial(8, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
     
     times = []
     for _ in range(3):
@@ -101,12 +83,26 @@ if __name__ == '__main__':
         mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
         times.append(time.perf_counter() - t0)
     t_serial = statistics.median(times)
-    print(f"Serial: {t_serial:.3f}s")  
+    print(f"Serial: {t_serial:.3f}s")
     
+    return t_serial
+
+def mandelbrot_plot(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter):
+    result = mandelbrot_parallel_p( N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)    
+    
+    #--  PLOT --
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.imshow(result, extent=[-2.5, 1.0, -1.25, 1.25], cmap='inferno', origin='lower', aspect='equal')
+    ax.set_xlabel('Re(c)')
+    ax.set_ylabel('Im(c)')
+    
+def sweep_workers(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter):
     # Sweep number of workers
     
     core_counts = []
     speedups = []
+    
+    t_serial = benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
         
     for n_workers in range(1, os.cpu_count() + 1):
         tiny = [(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)]
@@ -134,8 +130,7 @@ if __name__ == '__main__':
         speedups.append(speedup)
         core_counts.append(n_workers)
         
-        print(f"{n_workers:2d} workers: {t_par:.3f}s, speedup={speedup:.2f}x, eff={speedup/n_workers*100:.0f}%")
-        
+        print(f"Parallel: {n_workers:2d} workers: {t_par:.3f}s, speedup={speedup:.2f}x, eff={speedup/n_workers*100:.0f}%")      
     
     # Plot
     plt.figure()
@@ -144,14 +139,42 @@ if __name__ == '__main__':
     plt.ylabel("Speedup")
     plt.title("Speedup vs Core Count")
     plt.grid()
-        
-    
     plt.show()
+    
+    
+def benchmark_parallel(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks, n_workers):
+    t_serial = benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+    
+    tiny = [(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)]
+    chunk_size = max(1, N // n_chunks)
+    chunks, row = [], 0
+    
+    while row < N:
+        row_end = min(row + chunk_size, N)
+        chunks.append((row, row_end, N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter))
+        row = row_end
+    
+    with Pool(processes=n_workers) as pool:
+        # Warm-up: load JIT cache in workers
+        pool.map(_worker, tiny) 
+        
+        times = []
+        for _ in range(3):
+            t0 = time.perf_counter()
+            np.vstack(pool.map(_worker, chunks))
+            times.append(time.perf_counter() - t0)
+            
+    t_par = statistics.median(times)
+    speedup = t_serial / t_par
+    print(f"{n_workers:2d} workers: {t_par:.3f}s, speedup={speedup:.2f}x")  
+    
+    
+def chunk_sweep(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_workers):
     # Chunk-count sweep (M2): one Pool per config    
-    n_workers = 12
+    t_serial = benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
     tiny = [(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)]
     
-    for mult in [1, 2, 4, 8, 16]:
+    for mult in [1, 2, 3, 4, 8, 16]:
         n_chunks = mult * n_workers
         
         chunk_size = max(1, N // n_chunks)
@@ -176,5 +199,28 @@ if __name__ == '__main__':
         lif = (n_workers * t_par / t_serial) - 1
         
         print(f"{n_chunks:4d} chunks {t_par:.3f}s {t_serial/t_par:.1f}x LIF={lif:.2f}")
+    
+
+if __name__ == '__main__':
+    N, max_iter = 2048, 100
+    X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
+    n_chunks = 48
+    n_workers = 12
+    
+    # mandelbrot_plot(1024, -2.0, 1.0, -1.25, 1.25, 100)
+    
+    # sweep_workers(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+    
+    # chunk_sweep(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_workers)
+      
+    # Serial baseline (Numba already warm after M1 warm-up)
+    # benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)  
+    
+    benchmark_parallel(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks, n_workers)
+    
+    
+         
+    
+    
     
 

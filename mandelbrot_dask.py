@@ -55,53 +55,35 @@ def mandelbrot_dask(N, x_min, x_max, y_min, y_max, max_iter=100, n_chunks=32):
     parts = dask.compute(*tasks)
     return np.vstack(parts)
 
-if __name__ == '__main__':
-    # Configuration
-    N, max_iter = 4096, 100
-    X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
-    
-    # Setup Dask Cluster
-    cluster = LocalCluster(n_workers=8, threads_per_worker=1)
-    client = Client(cluster)
-    
-    # Warm up all workers to ensure JIT compilation is triggered before timing
-    client.run(lambda: mandelbrot_chunk(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, 10))
-    # ref = mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
-    
+def chunk_sweep(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter):
+
+    chunk_numbers = [1,2,4,8,16,24,32,64,128,256,512]
+    results = []
     # ----------------------------
     # Serial baseline
     # ----------------------------
     t0 = time.perf_counter()
     mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
     T1 = time.perf_counter() - t0
+    
     print(f"\nSerial baseline T1 = {T1:.3f}s\n")
-    
-    chunk_numbers = [1,2,4,8,16,32,64,128,256,512]
-    results = []
-    
     print(f"{'n_chunks':>10} | {'time (s)':>10} | {'vs 1x':>8} | {'speedup':>8} | {'LIF':>8}")
     print("-" * 60)
-    
-    
-    times_to_plot = []
-    chunk_sizes = []
     
     for n_chunks in chunk_numbers:
         times = []
         for _ in range(3):
             t0 = time.perf_counter()
-            result = mandelbrot_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks)
+            mandelbrot_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks)
             # print(np.array_equal(ref, result))
             times.append(time.perf_counter() - t0)
         
-    
         # Output results
         Tp = statistics.median(times)
         n_workers = 12
         speedup = T1 / Tp
         vs1x = Tp / T1
         LIF = n_workers * Tp / T1 - 1
-
         results.append((n_chunks, Tp, LIF))
 
         print(f"{n_chunks:10d} | {Tp:10.3f} | {vs1x:8.3f} | {speedup:8.3f} | {LIF:8.3f}")
@@ -118,7 +100,6 @@ if __name__ == '__main__':
 
     # ----------------------------
     # Plot
-    # ----------------------------
     x = []
     y = []
     for r in results:
@@ -133,6 +114,57 @@ if __name__ == '__main__':
     plt.ylabel("Wall time (s)")
     plt.title("Dask Chunk Sweep")
     plt.grid()
+
+def benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter):
+    times = []
+    for _ in range(3):
+        t0 = time.perf_counter()
+        mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+        T1 = time.perf_counter() - t0
+        times.append(T1)
+   
+    Tp = statistics.median(times)
+    print(f"\nSerial {Tp:.3f}s")
+    
+    return Tp
+    
+def benchmark_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks):
+    times = []
+    for _ in range(3):
+        t0 = time.perf_counter()
+        mandelbrot_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks)
+        # print(np.array_equal(ref, result))
+        times.append(time.perf_counter() - t0)
+    
+    # Output results
+    Tp = statistics.median(times)
+    T1 = benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+    speedup = T1 / Tp
+    
+    print(f"\n Dask Local {Tp:.3f}s\n Speedup {speedup:8.3f}")
+
+
+if __name__ == '__main__':
+    # Configuration
+    N, max_iter = 2048, 100
+    X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
+    
+    # Setup Dask Cluster
+    cluster = LocalCluster(n_workers=12, threads_per_worker=1)
+    client = Client(cluster)
+    
+    # Warm up all workers to ensure JIT compilation is triggered before timing
+    client.run(lambda: mandelbrot_chunk(0, 8, 8, X_MIN, X_MAX, Y_MIN, Y_MAX, 10))
+    
+    # benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+    
+    chunk_sweep(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+    
+    
+    n_chunks = 32
+    benchmark_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks)
+
+    
 
     
     # Clean up
