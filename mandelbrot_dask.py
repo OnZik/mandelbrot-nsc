@@ -35,7 +35,6 @@ def mandelbrot_chunk(row_start, row_end, N, x_min, x_max, y_min, y_max, max_iter
 def mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter=100):
     return mandelbrot_chunk(0, N, N, x_min, x_max, y_min, y_max, max_iter)
 
-# mandelbrot_chunk: assumed to be your @njit(cache=True) function from previous lessons
 def mandelbrot_dask(N, x_min, x_max, y_min, y_max, max_iter=100, n_chunks=32):
     chunk_size = max(1, N // n_chunks)
     tasks = []
