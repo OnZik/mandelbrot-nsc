@@ -9,7 +9,7 @@ Course : Numerical Scientific Computing 2026
 import numpy as np
 import matplotlib.pyplot as plt
 
-def mandelbrod_point(c, max_iter):
+def mandelbrot_point_naive(c, max_iter):
     z = 0
     n_iter = 0
     for n in range(max_iter):
@@ -18,7 +18,7 @@ def mandelbrod_point(c, max_iter):
         if (abs(z) > 2):
             break;
             
-    return n_iter
+    return n_iter + 1
 
 def mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter):
     
@@ -30,7 +30,7 @@ def mandelbrot_naive(xmin, xmax, ymin, ymax, width, height, max_iter):
     for x, imag in enumerate(y_points):
        
         for y, real in enumerate(x_points):
-            iter_count = mandelbrod_point(real + imag*1j, max_iter)
+            iter_count = mandelbrot_point_naive(real + imag*1j, max_iter)
            
             output[x][y] = iter_count
      

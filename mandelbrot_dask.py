@@ -32,7 +32,7 @@ def mandelbrot_chunk(row_start, row_end, N, x_min, x_max, y_min, y_max, max_iter
             out[r, col] = mandelbrot_pixel(x_min + col*dx, c_imag, max_iter)
     return out
 
-def mandelbrot_serial(N, x_min, x_max, y_min, y_max, max_iter=100):
+def mandelbrot_serial_dask(N, x_min, x_max, y_min, y_max, max_iter=100):
     return mandelbrot_chunk(0, N, N, x_min, x_max, y_min, y_max, max_iter)
 
 def mandelbrot_dask(N, x_min, x_max, y_min, y_max, max_iter=100, n_chunks=32):
@@ -62,7 +62,7 @@ def chunk_sweep(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter):
     # Serial baseline
     # ----------------------------
     t0 = time.perf_counter()
-    mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+    mandelbrot_serial_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
     T1 = time.perf_counter() - t0
     
     print(f"\nSerial baseline T1 = {T1:.3f}s\n")
@@ -118,7 +118,7 @@ def benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter):
     times = []
     for _ in range(3):
         t0 = time.perf_counter()
-        mandelbrot_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+        mandelbrot_serial_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
         T1 = time.perf_counter() - t0
         times.append(T1)
    
@@ -146,7 +146,7 @@ def benchmark_dask(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks):
 if __name__ == '__main__':
     # Configuration
     N, max_iter = 2048, 100
-    X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
+    X_MIN, X_MAX, Y_MIN, Y_MAX = -2.0, 1.0, -1.25, 1.25
     
     # Setup Dask Cluster
     cluster = LocalCluster(n_workers=12, threads_per_worker=1)
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     
     # benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
     
-    chunk_sweep(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
+    # chunk_sweep(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)
     
     
     n_chunks = 32

@@ -30,8 +30,8 @@ def mandelbrot_pixel(c_real, c_imag , max_iter):
 def mandelbrot_chunk(row_start, row_end, N, x_min, x_max, y_min, y_max, max_iter):
     
     out = np.empty((row_end - row_start, N), dtype=np.int32)
-    dx = (x_max - x_min) / N
-    dy = (y_max - y_min) / N
+    dx = (x_max - x_min) / (N-1)
+    dy = (y_max - y_min) / (N-1)
     for r in range(row_end - row_start):
         c_imag = y_min + (r + row_start) * dy
         for col in range(N):
@@ -46,8 +46,9 @@ def _worker(args):
     return mandelbrot_chunk(*args)
 
 
-def mandelbrot_parallel_p(N, x_min, x_max, y_min, y_max, max_iter=100, n_workers=12, n_chunks=None, pool=None):
+def mandelbrot_parallel_p(x_min, x_max, y_min, y_max, N1, N2, max_iter, n_workers=12, n_chunks=None, pool=None):
     
+    N = N1
     if n_chunks is None:
         n_chunks = n_workers
         
@@ -88,7 +89,7 @@ def benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter):
     return t_serial
 
 def mandelbrot_plot(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter):
-    result = mandelbrot_parallel_p( N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)    
+    result = mandelbrot_parallel_p(X_MIN, X_MAX, Y_MIN, Y_MAX, N, N, max_iter)    
     
     #--  PLOT --
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -202,10 +203,15 @@ def chunk_sweep(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_workers):
     
 
 if __name__ == '__main__':
-    N, max_iter = 2048, 100
-    X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
-    n_chunks = 48
+    N, max_iter = 1024, 100
+    X_MIN, X_MAX, Y_MIN, Y_MAX = -2.0, 1.0, -1.25, 1.25
+    #n_chunks = 48
     n_workers = 12
+    
+    output = mandelbrot_parallel_p(X_MIN, X_MAX, Y_MIN, Y_MAX, N, N, max_iter)
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.imshow(output, extent=[-2.5, 1.0, -1.25, 1.25], cmap='inferno', origin='lower', aspect='equal')
+    
     
     # mandelbrot_plot(1024, -2.0, 1.0, -1.25, 1.25, 100)
     
@@ -216,7 +222,7 @@ if __name__ == '__main__':
     # Serial baseline (Numba already warm after M1 warm-up)
     # benchmark_serial(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter)  
     
-    benchmark_parallel(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks, n_workers)
+    #benchmark_parallel(N, X_MIN, X_MAX, Y_MIN, Y_MAX, max_iter, n_chunks, n_workers)
     
     
          

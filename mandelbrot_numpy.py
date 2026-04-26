@@ -18,6 +18,8 @@ import timeit
 
 def mandelbrot_numpy(xmin, xmax, ymin, ymax, width, height, max_iter):
     
+    
+    
     x = np.linspace ( xmin , xmax, width) #  x- values
     y = np.linspace ( ymin , ymax , height) #  y- values
     X , Y = np.meshgrid (x , y) # 2D grids
